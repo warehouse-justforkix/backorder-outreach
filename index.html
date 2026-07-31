@@ -196,16 +196,10 @@ details.swap[open]>summary .chev{transform:rotate(90deg)}
   <div class="auth-card">
     <img class="mark" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23d6006e'/><g fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'><rect x='15' y='30' width='40' height='28'/><path d='M55 39h13l9 9v10H55z'/><circle cx='29' cy='66' r='6'/><circle cx='63' cy='66' r='6'/></g><circle cx='74' cy='72' r='15' fill='%23c30069'/><g fill='none' stroke='white' stroke-width='4' stroke-linecap='round'><circle cx='74' cy='72' r='9'/><path d='M74 66v6l4 2'/></g></svg>" alt="">
     <h2>Backorder Outreach</h2>
-    <p>Private to Just For Kix. Sign in with your work email.</p>
-    <div id="stepEmail">
-      <input id="authEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@justforkix.com">
-      <button class="btn primary" id="sendCode">Email me a sign-in code</button>
-    </div>
-    <div id="stepCode" hidden>
-      <input id="authCode" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code">
-      <button class="btn primary" id="verifyCode">Sign in</button>
-      <button class="btn ghost" id="backEmail">Use a different email</button>
-    </div>
+    <p>Private to Just For Kix. Sign in to continue.</p>
+    <input id="authEmail" type="email" inputmode="email" autocomplete="username" placeholder="you@justforkix.com">
+    <input id="authPass" type="password" autocomplete="current-password" placeholder="Password">
+    <button class="btn primary" id="signIn">Sign in</button>
     <div class="auth-err" id="authErr"></div>
   </div>
 </div>
@@ -488,30 +482,19 @@ async function checkSession(){
   const {data:{session}} = await supa.auth.getSession();
   if(session){ enterApp(); }
 }
-$("#sendCode").addEventListener("click",async()=>{
-  const email=$("#authEmail").value.trim(); showErr("");
-  if(!email){showErr("Enter your email.");return;}
-  $("#sendCode").disabled=true; $("#sendCode").textContent="Sending…";
-  const {error}=await supa.auth.signInWithOtp({email,options:{shouldCreateUser:false}});
-  $("#sendCode").disabled=false; $("#sendCode").textContent="Email me a sign-in code";
-  if(error){showErr(/Signups|not allowed|not authorized/i.test(error.message)
-    ?"That email isn't authorized for this app.":error.message);return;}
-  $("#stepEmail").hidden=true; $("#stepCode").hidden=false; $("#authCode").focus();
-  showErr("Code sent — check your email.");
-});
-$("#verifyCode").addEventListener("click",async()=>{
-  const email=$("#authEmail").value.trim(), token=$("#authCode").value.trim(); showErr("");
-  if(!token){showErr("Enter the 6-digit code.");return;}
-  $("#verifyCode").disabled=true; $("#verifyCode").textContent="Signing in…";
-  const {error}=await supa.auth.verifyOtp({email,token,type:"email"});
-  $("#verifyCode").disabled=false; $("#verifyCode").textContent="Sign in";
-  if(error){showErr("Wrong or expired code — try again.");return;}
+async function doSignIn(){
+  const email=$("#authEmail").value.trim(), password=$("#authPass").value; showErr("");
+  if(!email||!password){showErr("Enter your email and password.");return;}
+  $("#signIn").disabled=true; $("#signIn").textContent="Signing in…";
+  const {error}=await supa.auth.signInWithPassword({email,password});
+  $("#signIn").disabled=false; $("#signIn").textContent="Sign in";
+  if(error){showErr(/Invalid login/i.test(error.message)
+    ?"Wrong email or password.":error.message);return;}
   enterApp();
-});
-$("#backEmail").addEventListener("click",()=>{
-  $("#stepCode").hidden=true; $("#stepEmail").hidden=false; showErr("");});
-$("#authCode").addEventListener("keydown",e=>{if(e.key==="Enter")$("#verifyCode").click();});
-$("#authEmail").addEventListener("keydown",e=>{if(e.key==="Enter")$("#sendCode").click();});
+}
+$("#signIn").addEventListener("click",doSignIn);
+$("#authPass").addEventListener("keydown",e=>{if(e.key==="Enter")doSignIn();});
+$("#authEmail").addEventListener("keydown",e=>{if(e.key==="Enter")$("#authPass").focus();});
 signOutBtn.addEventListener("click",async()=>{await supa.auth.signOut();location.reload();});
 checkSession();
 
