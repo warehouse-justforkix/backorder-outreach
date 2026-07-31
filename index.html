@@ -1,0 +1,518 @@
+<meta charset="utf-8">
+<title>JFK Backorder Outreach</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23d6006e'/><g fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'><rect x='15' y='30' width='40' height='28'/><path d='M55 39h13l9 9v10H55z'/><circle cx='29' cy='66' r='6'/><circle cx='63' cy='66' r='6'/></g><circle cx='74' cy='72' r='15' fill='%23c30069'/><g fill='none' stroke='white' stroke-width='4' stroke-linecap='round'><circle cx='74' cy='72' r='9'/><path d='M74 66v6l4 2'/></g></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --accent:#d6006e; --accent-ink:#fff;
+  --bg:#faf6f8; --panel:#ffffff; --panel-2:#fbf3f7;
+  --ink:#241a1f; --ink-soft:#6b5b63; --ink-faint:#9a8b92;
+  --line:#ecd9e3; --line-soft:#f3e7ee;
+  --shadow:0 1px 2px rgba(60,10,35,.06),0 6px 20px rgba(60,10,35,.06);
+  --rose-bg:#fde8ec; --rose-ink:#a3123a; --rose-line:#f4c3cf;
+  --amber-bg:#fdefdc; --amber-ink:#8a5300; --amber-line:#f3d8ac;
+  --teal-bg:#dcf1f0; --teal-ink:#0d5f5c; --teal-line:#b3ddda;
+  --green-bg:#e2f3e5; --green-ink:#1c6b34; --green-line:#bde3c5;
+  --radius:14px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --head:"SF Pro Display","Segoe UI",Inter,var(--sans);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --accent:#ff5ca8; --accent-ink:#2a0016;
+  --bg:#171114; --panel:#221a1e; --panel-2:#2a2024;
+  --ink:#f3e9ee; --ink-soft:#c3aeb8; --ink-faint:#8f7b84;
+  --line:#3a2c33; --line-soft:#31252b;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  --rose-bg:#3d1622; --rose-ink:#ff9db2; --rose-line:#5c2231;
+  --amber-bg:#3a2913; --amber-ink:#f0c078; --amber-line:#5a4020;
+  --teal-bg:#123534; --teal-ink:#7fd6d1; --teal-line:#1e514f;
+  --green-bg:#163220; --green-ink:#8fe0a3; --green-line:#245235;
+}}
+:root[data-theme="light"]{
+  --accent:#d6006e; --accent-ink:#fff; --bg:#faf6f8; --panel:#ffffff; --panel-2:#fbf3f7;
+  --ink:#241a1f; --ink-soft:#6b5b63; --ink-faint:#9a8b92; --line:#ecd9e3; --line-soft:#f3e7ee;
+  --shadow:0 1px 2px rgba(60,10,35,.06),0 6px 20px rgba(60,10,35,.06);
+  --rose-bg:#fde8ec; --rose-ink:#a3123a; --rose-line:#f4c3cf;
+  --amber-bg:#fdefdc; --amber-ink:#8a5300; --amber-line:#f3d8ac;
+  --teal-bg:#dcf1f0; --teal-ink:#0d5f5c; --teal-line:#b3ddda;
+  --green-bg:#e2f3e5; --green-ink:#1c6b34; --green-line:#bde3c5;
+}
+:root[data-theme="dark"]{
+  --accent:#ff5ca8; --accent-ink:#2a0016; --bg:#171114; --panel:#221a1e; --panel-2:#2a2024;
+  --ink:#f3e9ee; --ink-soft:#c3aeb8; --ink-faint:#8f7b84; --line:#3a2c33; --line-soft:#31252b;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  --rose-bg:#3d1622; --rose-ink:#ff9db2; --rose-line:#5c2231;
+  --amber-bg:#3a2913; --amber-ink:#f0c078; --amber-line:#5a4020;
+  --teal-bg:#123534; --teal-ink:#7fd6d1; --teal-line:#1e514f;
+  --green-bg:#163220; --green-ink:#8fe0a3; --green-line:#245235;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px 80px}
+h1,h2,h3{font-family:var(--head);font-weight:700;letter-spacing:-.01em;text-wrap:balance;margin:0}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* header */
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line);margin-bottom:22px}
+.hrow{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{font-size:20px}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);align-self:center}
+.brand small{color:var(--ink-faint);font-size:12.5px}
+.stats{display:flex;gap:18px;margin-left:auto;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;line-height:1.15}
+.stat b{font-family:var(--head);font-size:19px}
+.stat span{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;padding:0 0 12px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--ink-soft);
+  padding:6px 12px;border-radius:999px;font-size:13px;cursor:pointer;font-weight:600;
+  display:inline-flex;align-items:center;gap:7px;transition:.12s}
+.chip .n{font-variant-numeric:tabular-nums;color:var(--ink-faint);font-weight:700}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip[aria-pressed="true"] .n{color:var(--accent-ink);opacity:.8}
+.searchbox{margin-left:auto;position:relative}
+.searchbox input{border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  border-radius:999px;padding:7px 14px;font-size:13.5px;width:230px;font-family:var(--sans)}
+.searchbox input:focus{outline:2px solid var(--accent);outline-offset:1px}
+
+/* order card */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+.card.urgent{border-color:var(--rose-line)}
+.chead{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line-soft)}
+.cust{min-width:200px}
+.cust .name{font-family:var(--head);font-size:17px;font-weight:700}
+.cust .cid{color:var(--ink-faint);font-size:12px;font-variant-numeric:tabular-nums}
+.refs{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.ref{display:inline-flex;align-items:center;gap:6px;background:var(--panel-2);border:1px solid var(--line-soft);
+  border-radius:9px;padding:5px 8px 5px 10px;font-size:12.5px}
+.ref .lab{color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;font-size:10px;font-weight:700}
+.ref .val{font-variant-numeric:tabular-nums;font-weight:600;font-family:var(--mono);font-size:12.5px}
+.copy{border:none;background:transparent;color:var(--ink-faint);cursor:pointer;padding:3px;border-radius:6px;
+  display:inline-flex;line-height:0;transition:.12s}
+.copy:hover{color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.copy svg{width:14px;height:14px}
+.emails{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:4px}
+.email{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft);
+  background:var(--panel-2);border:1px solid var(--line-soft);border-radius:8px;padding:4px 6px 4px 10px}
+.email .addr{font-family:var(--mono);font-size:12.5px}
+
+/* lines */
+.lines{padding:6px 18px 8px}
+.line{display:grid;grid-template-columns:1fr auto;gap:8px 16px;padding:14px 0;border-bottom:1px dashed var(--line-soft)}
+.line:last-child{border-bottom:none}
+.litem{display:flex;flex-direction:column;gap:4px}
+.sku{font-family:var(--mono);font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.prod{color:var(--ink-soft);font-size:13.5px}
+.badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:2px;align-items:center}
+.badge{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid;
+  display:inline-flex;align-items:center;gap:5px;letter-spacing:.01em}
+.b-disc{background:var(--amber-bg);color:var(--amber-ink);border-color:var(--amber-line)}
+.b-discx{background:var(--rose-bg);color:var(--rose-ink);border-color:var(--rose-line)}
+.b-back{background:var(--teal-bg);color:var(--teal-ink);border-color:var(--teal-line)}
+.b-swap{background:var(--green-bg);color:var(--green-ink);border-color:var(--green-line)}
+.b-plain{background:var(--panel-2);color:var(--ink-soft);border-color:var(--line)}
+.timing{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
+.timing b{color:var(--ink);font-weight:600}
+.lqty{text-align:right;font-size:12.5px;color:var(--ink-faint);white-space:nowrap}
+.lqty b{display:block;font-family:var(--head);font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* swap dropdown */
+.swap{grid-column:1/-1;margin-top:4px}
+details.swap>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:600;color:var(--accent);padding:6px 10px;border:1px solid var(--line);
+  border-radius:9px;background:var(--panel-2);user-select:none}
+details.swap>summary::-webkit-details-marker{display:none}
+details.swap>summary .chev{transition:.15s;display:inline-flex}
+details.swap[open]>summary .chev{transform:rotate(90deg)}
+.swaplist{margin-top:8px;border:1px solid var(--line-soft);border-radius:10px;overflow:hidden;max-height:260px;overflow-y:auto}
+.swaprow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line-soft);font-size:13px}
+.swaprow:last-child{border-bottom:none}
+.swaprow.sel{background:var(--green-bg)}
+.swaprow .ssku{font-family:var(--mono);font-weight:600}
+.swaprow .tag{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:999px;
+  background:var(--panel-2);border:1px solid var(--line);color:var(--ink-faint)}
+.swaprow .tag.match{background:var(--green-bg);color:var(--green-ink);border-color:var(--green-line)}
+.swaprow .av{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.swaprow .av b{color:var(--green-ink)}
+.pick{border:1px solid var(--line);background:var(--panel);color:var(--ink-soft);border-radius:7px;
+  padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer}
+.pick:hover{border-color:var(--accent);color:var(--accent)}
+.pick.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.noswap{font-size:12.5px;color:var(--rose-ink);font-weight:600;margin-top:4px}
+
+/* email panel */
+.cfoot{padding:12px 18px 16px;background:var(--panel-2);border-top:1px solid var(--line-soft)}
+.btn{border:none;border-radius:10px;padding:9px 16px;font-size:13.5px;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;font-family:var(--sans)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:var(--panel);color:var(--ink-soft);border:1px solid var(--line)}
+.btn svg{width:15px;height:15px}
+.draftwrap{margin-top:12px;display:none}
+.draftwrap.show{display:block}
+.draftwrap textarea{width:100%;min-height:230px;border:1px solid var(--line);border-radius:10px;background:var(--panel);
+  color:var(--ink);padding:14px;font-family:var(--sans);font-size:13.5px;line-height:1.55;resize:vertical}
+.draftwrap textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.subj{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
+.subj .lab{color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;font-size:10px;font-weight:700}
+.subj input{flex:1;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);
+  padding:7px 10px;font-size:13px;font-family:var(--sans)}
+.draftbtns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+
+.empty{text-align:center;padding:60px 20px;color:var(--ink-faint)}
+.foot{margin-top:26px;color:var(--ink-faint);font-size:12px;text-align:center;line-height:1.7}
+.foot code{font-family:var(--mono);background:var(--panel-2);padding:1px 6px;border-radius:5px}
+
+/* toast */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;
+  background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:13.5px;font-weight:600;
+  box-shadow:var(--shadow);transition:.2s;pointer-events:none;z-index:50}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:640px){.line{grid-template-columns:1fr}.lqty{text-align:left}.searchbox input{width:150px}}
+
+[hidden]{display:none!important}
+.auth-gate{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);padding:24px}
+.auth-card{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);
+  border-radius:18px;box-shadow:var(--shadow);padding:30px 26px;text-align:center}
+.auth-card .mark{width:64px;height:64px;border-radius:16px;margin:0 auto 14px;display:block}
+.auth-card h2{font-family:var(--head);font-size:22px;margin:0 0 6px}
+.auth-card p{color:var(--ink-soft);font-size:13.5px;margin:0 0 18px}
+.auth-card input{width:100%;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);
+  border-radius:10px;padding:11px 13px;font-size:15px;font-family:var(--sans);margin-bottom:10px;text-align:center}
+.auth-card input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.auth-card .btn{width:100%;justify-content:center;margin-bottom:8px}
+.auth-err{color:var(--rose-ink);font-size:12.5px;min-height:16px;margin-top:4px}
+.signout{position:fixed;bottom:14px;right:16px;z-index:40;font-size:12px;color:var(--ink-faint);
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}
+</style>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <img class="mark" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23d6006e'/><g fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'><rect x='15' y='30' width='40' height='28'/><path d='M55 39h13l9 9v10H55z'/><circle cx='29' cy='66' r='6'/><circle cx='63' cy='66' r='6'/></g><circle cx='74' cy='72' r='15' fill='%23c30069'/><g fill='none' stroke='white' stroke-width='4' stroke-linecap='round'><circle cx='74' cy='72' r='9'/><path d='M74 66v6l4 2'/></g></svg>" alt="">
+    <h2>Backorder Outreach</h2>
+    <p>Private to Just For Kix. Sign in with your work email.</p>
+    <div id="stepEmail">
+      <input id="authEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@justforkix.com">
+      <button class="btn primary" id="sendCode">Email me a sign-in code</button>
+    </div>
+    <div id="stepCode" hidden>
+      <input id="authCode" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code">
+      <button class="btn primary" id="verifyCode">Sign in</button>
+      <button class="btn ghost" id="backEmail">Use a different email</button>
+    </div>
+    <div class="auth-err" id="authErr"></div>
+  </div>
+</div>
+<div id="appRoot" hidden>
+<header>
+  <div class="hrow">
+    <div class="brand"><span class="dot"></span><h1>Backorder Outreach</h1>
+      <small id="gen"></small></div>
+    <div class="stats">
+      <div class="stat"><b class="tnum" id="s-orders">0</b><span>Orders</span></div>
+      <div class="stat"><b class="tnum" id="s-lines">0</b><span>Backordered items</span></div>
+      <div class="stat"><b class="tnum" id="s-disc">0</b><span>Discontinued</span></div>
+    </div>
+    <button class="btn primary" id="syncBtn" style="margin-left:16px" title="Pull the latest backorders from NetSuite">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M20.87 13.5a9 9 0 1 1-2.13-9.36L21.5 6.5"/></svg>
+      <span id="syncLbl">Refresh</span></button>
+  </div>
+  <div class="hrow" style="padding-top:0">
+    <div class="filters" id="filters">
+      <button class="chip" data-f="all" aria-pressed="true">All <span class="n" id="c-all">0</span></button>
+      <button class="chip" data-f="refund" aria-pressed="false">Refund only <span class="n" id="c-refund">0</span></button>
+      <button class="chip" data-f="disc" aria-pressed="false">Has discontinued <span class="n" id="c-disc">0</span></button>
+      <button class="chip" data-f="back" aria-pressed="false">Backorder only <span class="n" id="c-back">0</span></button>
+      <button class="chip" data-f="swap" aria-pressed="false">Swap available <span class="n" id="c-swap">0</span></button>
+    </div>
+    <div class="searchbox"><input id="search" type="search" placeholder="Search customer, SKU, order#…"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="list"></div>
+  <div class="empty" id="empty" style="display:none">No orders match this filter.</div>
+  <div class="foot">
+    Live from your Just For Kix NetSuite + backorder feed, refreshed by the desktop sync. Sign-in is limited to your account.
+  </div>
+</div>
+</div>
+<button class="signout" id="signOut" hidden>Sign out</button>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+window.SUPA_URL="https://avprblrkvbmimdidswga.supabase.co";
+window.SUPA_KEY="sb_publishable_SAsCMUBhaX9PnNs9CvA5WQ_OAaOeBtN";
+</script>
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+let D={orders:[]};
+let filter="all", q="";
+
+/* ---- icons ---- */
+const IC={copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>'};
+
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1600);}
+async function copy(text,label){
+  try{await navigator.clipboard.writeText(text);}
+  catch(e){const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();}
+  toast((label||"Copied")+" copied");
+}
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const mdDate=s=>{const p=(s||"").split("/");return p.length>=2?p[0]+"/"+p[1]:s;};
+
+/* ---- email builder (reactive to selected swaps) ---- */
+function buildEmail(o){
+  const g=o.greeting||"there", ref=o.order_ref||o.doc, when=mdDate(o.order_date);
+  let paras=[`Hi ${g},`,
+    `I am reaching out regarding your recent order, order #${ref}, placed on ${when}.`];
+  let refundOnly=true;
+  o.lines.forEach((ln,i)=>{
+    const label=`${ln.sku} (${ln.product})`;
+    const sel=o._sel[i]; // selected swap sku or null
+    if(ln.obsolete){
+      if(sel){refundOnly=false;
+        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of. I reviewed our inventory and we do have ${sel} available — would you like to swap to that? An additional option is to cancel and refund this item back to your original form of payment.`);
+      }else{
+        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of, and we do not have any nearing sizes or colorways to offer for swap. I can cancel and refund this item back to your original form of payment.`);
+      }
+    }else{refundOnly=false;
+      const eta=(ln.timing&&ln.timing.eta_text)||"soon";
+      if(sel){
+        paras.push(`It seems that we are unfortunately out of ${label}. This item is on backorder at the moment. We do have ${sel} available if you'd like to make the swap today and have it shipped right now. Otherwise we predict the ordered item will arrive at our warehouse ${eta} and will ship out to you once received.`);
+      }else{
+        paras.push(`It seems that we are unfortunately out of ${label}. This item is on backorder at the moment. We predict it will arrive at our warehouse ${eta} and will ship out to you once received.`);
+      }
+    }
+  });
+  paras.push(refundOnly && o.lines.length===1
+    ? "Terribly sorry for any inconvenience, have a wonderful rest of your day!"
+    : "Terribly sorry for any inconvenience. Please let me know how you would like to proceed, happy to help!");
+  return {subject:`Just For Kix — update on your order #${ref}`, body:paras.join("\n\n")};
+}
+
+/* ---- render ---- */
+function matchOrder(o){
+  if(q){const hay=(o.customer+" "+o.doc+" "+o.order_ref+" "+o.emails.join(" ")+" "+
+    o.lines.map(l=>l.sku+" "+l.product).join(" ")).toLowerCase();
+    if(!hay.includes(q))return false;}
+  if(filter==="all")return true;
+  if(filter==="refund")return o.needs_refund_only;
+  if(filter==="disc")return o.has_discontinued;
+  if(filter==="back")return !o.has_discontinued;
+  if(filter==="swap")return o.has_swaps;
+  return true;
+}
+function swapTag(s,ln){
+  if(s.same_color)return '<span class="tag match">same color</span>';
+  if(s.size===ln.size)return '<span class="tag match">same size</span>';
+  return '<span class="tag">alt</span>';
+}
+function render(){
+  const list=$("#list");list.innerHTML="";
+  const shown=D.orders.filter(matchOrder);
+  $("#empty").style.display=shown.length?"none":"block";
+  shown.forEach(o=>{
+    if(!o._sel)o._sel=o.lines.map(l=>l.swaps.length?l.swaps[0].sku:null);
+    const card=document.createElement("div");
+    card.className="card"+(o.needs_refund_only?" urgent":"");
+    // header
+    let refs=`<div class="ref"><span class="lab">NS Order</span><span class="val">${esc(o.doc)}</span>
+      <button class="copy" data-copy="${esc(o.doc)}" data-lab="NS order #">${IC.copy}</button></div>`;
+    if(o.order_ref)refs+=`<div class="ref"><span class="lab">${esc(o.channel)}</span><span class="val">${esc(o.order_ref)}</span>
+      <button class="copy" data-copy="${esc(o.order_ref)}" data-lab="Order #">${IC.copy}</button></div>`;
+    let emails=o.emails.map(e=>`<span class="email"><span class="addr">${esc(e)}</span>
+      <button class="copy" data-copy="${esc(e)}" data-lab="Email">${IC.copy}</button></span>`).join("");
+    // lines
+    let lines=o.lines.map((ln,i)=>{
+      let badge = ln.obsolete
+        ? (ln.swaps.length? '<span class="badge b-disc">Discontinued</span>'
+                          : '<span class="badge b-discx">Discontinued · refund</span>')
+        : '<span class="badge b-back">Backordered</span>';
+      if(ln.swaps.length) badge+=` <span class="badge b-swap">${ln.swaps.length} swap${ln.swaps.length>1?"s":""} in stock</span>`;
+      let timing="";
+      if(!ln.obsolete){
+        const t=ln.timing;
+        timing=`<div class="timing">Est. arrival: <b>${esc(t.eta_text||"—")}</b>`;
+        if(t.po)timing+=` · PO <b>${esc(t.po)}</b> (${esc(t.po_date)}) · ${esc(t.vendor||"")}`;
+        timing+=`</div>`;
+      }else{
+        timing=`<div class="timing">Discontinued — no restock.${ln.timing.po?` Last PO ${esc(ln.timing.po)} (${esc(ln.timing.po_date)}).`:""}</div>`;
+      }
+      // swap dropdown
+      let swap="";
+      if(ln.swaps.length){
+        const rows=ln.swaps.map(s=>`<div class="swaprow" data-sku="${esc(s.sku)}">
+          <span class="ssku">${esc(s.sku)}</span>${swapTag(s,ln)}
+          <span class="av">avail <b>${s.avail}</b></span>
+          <button class="pick" data-oi="${i}" data-sku="${esc(s.sku)}">Use in email</button>
+          <button class="copy" data-copy="${esc(s.sku)}" data-lab="SKU">${IC.copy}</button></div>`).join("");
+        swap=`<details class="swap"><summary><span class="chev">${IC.chev}</span>
+          Swap options · ${ln.swaps.length} in stock @ warehouse</summary>
+          <div class="swaplist" data-swaplist="${i}">${rows}</div></details>`;
+      }else{
+        swap=`<div class="noswap">No in-stock swaps at the warehouse${ln.obsolete?" → cancel & refund.":"."}</div>`;
+      }
+      return `<div class="line">
+        <div class="litem">
+          <span class="sku">${esc(ln.sku)} <button class="copy" data-copy="${esc(ln.sku)}" data-lab="SKU">${IC.copy}</button></span>
+          <span class="prod">${esc(ln.product)}</span>
+          <div class="badges">${badge}</div>${timing}
+          ${swap}
+        </div>
+        <div class="lqty"><b>${ln.bo_qty}</b>backordered${ln.on_order?`<br><span>${ln.on_order} on order</span>`:""}</div>
+      </div>`;
+    }).join("");
+
+    card.innerHTML=`
+      <div class="chead">
+        <div class="cust"><div class="name">${esc(o.customer)}</div>
+          <div class="cid">Customer ${esc(o.customer_id)} · ordered ${esc(o.order_date)} · flagged ${esc(o.flagged)}</div></div>
+        <div class="refs">${refs}</div>
+        <div class="emails">${emails}</div>
+      </div>
+      <div class="lines">${lines}</div>
+      <div class="cfoot">
+        <button class="btn primary" data-draft>${IC.mail} Draft email</button>
+        <button class="btn ghost" data-copyemails>Copy all emails</button>
+        <div class="draftwrap" data-draftwrap>
+          <div class="subj"><span class="lab">Subject</span><input data-subj readonly></div>
+          <textarea data-body spellcheck="true"></textarea>
+          <div class="draftbtns">
+            <button class="btn primary" data-copybody>${IC.copy} Copy email</button>
+            <button class="btn ghost" data-mailto>${IC.mail} Open in mail app</button>
+          </div>
+        </div>
+      </div>`;
+    // wire draft
+    const refreshDraft=()=>{const em=buildEmail(o);
+      card.querySelector("[data-subj]").value=em.subject;
+      card.querySelector("[data-body]").value=em.body;};
+    refreshDraft();
+    card._refresh=refreshDraft;
+    card._order=o;
+    list.appendChild(card);
+  });
+}
+
+/* ---- events (delegated) ---- */
+document.addEventListener("click",e=>{
+  const cp=e.target.closest("[data-copy]");
+  if(cp){copy(cp.dataset.copy,cp.dataset.lab);return;}
+  const pick=e.target.closest(".pick");
+  if(pick){
+    const card=pick.closest(".card"),o=card._order,oi=+pick.dataset.oi,sku=pick.dataset.sku;
+    o._sel[oi]=(o._sel[oi]===sku)?null:sku; // toggle
+    // update row highlight + button state
+    const box=card.querySelector(`[data-swaplist="${oi}"]`);
+    $$(".swaprow",box).forEach(r=>{const on=r.dataset.sku===o._sel[oi];
+      r.classList.toggle("sel",on);r.querySelector(".pick").classList.toggle("on",on);
+      r.querySelector(".pick").textContent=on?"✓ In email":"Use in email";});
+    card._refresh();toast(o._sel[oi]?"Swap set — draft updated":"Swap cleared");return;
+  }
+  const df=e.target.closest("[data-draft]");
+  if(df){const w=df.closest(".cfoot").querySelector("[data-draftwrap]");
+    w.classList.toggle("show");if(w.classList.contains("show"))w.scrollIntoView({behavior:"smooth",block:"nearest"});return;}
+  const cb=e.target.closest("[data-copybody]");
+  if(cb){copy(cb.closest(".cfoot").querySelector("[data-body]").value,"Email");return;}
+  const ce=e.target.closest("[data-copyemails]");
+  if(ce){const o=ce.closest(".card")._order;copy(o.emails.join(", "),"Emails");return;}
+  const mt=e.target.closest("[data-mailto]");
+  if(mt){const card=mt.closest(".card"),o=card._order;
+    const subj=encodeURIComponent(card.querySelector("[data-subj]").value);
+    const body=encodeURIComponent(card.querySelector("[data-body]").value);
+    location.href=`mailto:${encodeURIComponent(o.emails.join(","))}?subject=${subj}&body=${body}`;return;}
+  const chip=e.target.closest(".chip");
+  if(chip){filter=chip.dataset.f;$$(".chip").forEach(c=>c.setAttribute("aria-pressed",c===chip));render();}
+});
+// keep selected swap in sync when user edits body manually? body is free text; selection just seeds it.
+$("#search").addEventListener("input",e=>{q=e.target.value.trim().toLowerCase();render();});
+
+/* ---- in-page Sync button → launches the Sync Backorders app via URL scheme ---- */
+$("#syncBtn").addEventListener("click",()=>{
+  const btn=$("#syncBtn"), lbl=$("#syncLbl");
+  lbl.textContent="Syncing… (this tab will refresh)";
+  btn.disabled=true; btn.style.opacity=".7"; btn.style.cursor="default";
+  // trigger the local sync app; on success it reloads this tab automatically
+  loadSnapshot().then(()=>{lbl.textContent="Refresh";btn.disabled=false;btn.style.opacity="";btn.style.cursor="pointer";toast("Refreshed");});
+  // fallback re-enable if nothing happened (e.g. permission dialog dismissed)
+  setTimeout(()=>{ if(document.visibilityState!=="hidden"){
+    lbl.textContent="Sync now"; btn.disabled=false; btn.style.opacity=""; btn.style.cursor="pointer"; } },120000);
+});
+
+/* ---- init stats ---- */
+function init(){
+  $("#gen").textContent=D.generated?("· "+D.generated):"";
+  const os=D.orders;
+  $("#s-orders").textContent=D.order_count??os.length;
+  $("#s-lines").textContent=D.line_count??os.reduce((a,o)=>a+o.lines.length,0);
+  const disc=os.filter(o=>o.has_discontinued).length;
+  $("#s-disc").textContent=disc;
+  $("#c-all").textContent=os.length;
+  $("#c-refund").textContent=os.filter(o=>o.needs_refund_only).length;
+  $("#c-disc").textContent=disc;
+  $("#c-back").textContent=os.filter(o=>!o.has_discontinued).length;
+  $("#c-swap").textContent=os.filter(o=>o.has_swaps).length;
+  render();
+}
+init();
+
+/* ---- Supabase auth + snapshot fetch (hosted) ---- */
+const supa = window.supabase.createClient(window.SUPA_URL, window.SUPA_KEY);
+const gate=$("#authGate"), appRoot=$("#appRoot"), authErr=$("#authErr"), signOutBtn=$("#signOut");
+function showErr(m){authErr.textContent=m||"";}
+async function loadSnapshot(){
+  const {data,error} = await supa.from("backorder_snapshot")
+    .select("generated_at,payload").eq("id",1).maybeSingle();
+  if(error){showErr("Could not load data: "+error.message);return false;}
+  if(!data){D={orders:[],order_count:0,line_count:0};}
+  else {D=data.payload||{orders:[]}; if(data.generated_at&&!D.generated){
+    D.generated=new Date(data.generated_at).toLocaleString();}}
+  init();
+  return true;
+}
+async function enterApp(){
+  gate.hidden=true; appRoot.hidden=false; signOutBtn.hidden=false; await loadSnapshot();
+}
+async function checkSession(){
+  const {data:{session}} = await supa.auth.getSession();
+  if(session){ enterApp(); }
+}
+$("#sendCode").addEventListener("click",async()=>{
+  const email=$("#authEmail").value.trim(); showErr("");
+  if(!email){showErr("Enter your email.");return;}
+  $("#sendCode").disabled=true; $("#sendCode").textContent="Sending…";
+  const {error}=await supa.auth.signInWithOtp({email,options:{shouldCreateUser:false}});
+  $("#sendCode").disabled=false; $("#sendCode").textContent="Email me a sign-in code";
+  if(error){showErr(/Signups|not allowed|not authorized/i.test(error.message)
+    ?"That email isn't authorized for this app.":error.message);return;}
+  $("#stepEmail").hidden=true; $("#stepCode").hidden=false; $("#authCode").focus();
+  showErr("Code sent — check your email.");
+});
+$("#verifyCode").addEventListener("click",async()=>{
+  const email=$("#authEmail").value.trim(), token=$("#authCode").value.trim(); showErr("");
+  if(!token){showErr("Enter the 6-digit code.");return;}
+  $("#verifyCode").disabled=true; $("#verifyCode").textContent="Signing in…";
+  const {error}=await supa.auth.verifyOtp({email,token,type:"email"});
+  $("#verifyCode").disabled=false; $("#verifyCode").textContent="Sign in";
+  if(error){showErr("Wrong or expired code — try again.");return;}
+  enterApp();
+});
+$("#backEmail").addEventListener("click",()=>{
+  $("#stepCode").hidden=true; $("#stepEmail").hidden=false; showErr("");});
+$("#authCode").addEventListener("keydown",e=>{if(e.key==="Enter")$("#verifyCode").click();});
+$("#authEmail").addEventListener("keydown",e=>{if(e.key==="Enter")$("#sendCode").click();});
+signOutBtn.addEventListener("click",async()=>{await supa.auth.signOut();location.reload();});
+checkSession();
+
+</script>
