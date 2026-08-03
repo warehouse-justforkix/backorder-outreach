@@ -81,8 +81,30 @@ header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 8
 
 /* order card */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-  box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+  box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;
+  display:grid;grid-template-columns:1fr 262px}
 .card.urgent{border-color:var(--rose-line)}
+.cbody{min-width:0}
+.cside{border-left:1px solid var(--line-soft);background:var(--panel-2);
+  padding:14px;display:flex;flex-direction:column;gap:10px}
+.cside .emailed{display:inline-flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;
+  color:var(--ink-soft);cursor:pointer;user-select:none;padding:4px 2px}
+.cside .emailed input{width:20px;height:20px;accent-color:var(--green-ink);cursor:pointer;margin:0}
+.card.emailed-on .cside{background:var(--green-bg)}
+.card.emailed-on{border-color:var(--green-line)}
+.card.emailed-on .cside .emailed{color:var(--green-ink)}
+.cside .emailed .done{display:none}
+.card.emailed-on .cside .emailed .todo{display:none}
+.card.emailed-on .cside .emailed .done{display:inline}
+.cside .nlab{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
+.cside .cnote{flex:1;min-height:96px;border:1px solid var(--line);border-radius:10px;
+  background:var(--panel);color:var(--ink);padding:10px 11px;font-family:var(--sans);
+  font-size:13px;line-height:1.45;resize:vertical}
+.cside .cnote:focus{outline:2px solid var(--accent);outline-offset:1px}
+.cside .saved{font-size:11px;color:var(--green-ink);min-height:14px;opacity:0;transition:.2s}
+.cside .saved.show{opacity:1}
+@media(max-width:720px){.card{grid-template-columns:1fr}
+  .cside{border-left:none;border-top:1px solid var(--line-soft)}}
 .chead{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;flex-wrap:wrap;
   border-bottom:1px solid var(--line-soft)}
 .cust{min-width:200px}
@@ -250,6 +272,9 @@ window.SUPA_KEY="sb_publishable_SAsCMUBhaX9PnNs9CvA5WQ_OAaOeBtN";
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 let D={orders:[]};
 let filter="all", q="";
+// per-order notes + emailed flag (hosted build backs these with Supabase; default no-op)
+window.STATUS = window.STATUS || {};
+window.saveStatus = window.saveStatus || function(){};
 
 /* ---- icons ---- */
 const IC={copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
@@ -369,26 +394,37 @@ function render(){
       </div>`;
     }).join("");
 
+    const st = window.STATUS[o.doc] || {};
     card.innerHTML=`
-      <div class="chead">
-        <div class="cust"><div class="name">${esc(o.customer)}</div>
-          <div class="cid">Customer ${esc(o.customer_id)} · ordered ${esc(o.order_date)} · flagged ${esc(o.flagged)}</div></div>
-        <div class="refs">${refs}</div>
-        <div class="emails">${emails}</div>
-      </div>
-      <div class="lines">${lines}</div>
-      <div class="cfoot">
-        <button class="btn primary" data-draft>${IC.mail} Draft email</button>
-        <button class="btn ghost" data-copyemails>Copy all emails</button>
-        <div class="draftwrap" data-draftwrap>
-          <div class="subj"><span class="lab">Subject</span><input data-subj readonly></div>
-          <textarea data-body spellcheck="true"></textarea>
-          <div class="draftbtns">
-            <button class="btn primary" data-copybody>${IC.copy} Copy email</button>
-            <button class="btn ghost" data-mailto>${IC.mail} Open in mail app</button>
+      <div class="cbody">
+        <div class="chead">
+          <div class="cust"><div class="name">${esc(o.customer)}</div>
+            <div class="cid">Customer ${esc(o.customer_id)} · ordered ${esc(o.order_date)} · flagged ${esc(o.flagged)}</div></div>
+          <div class="refs">${refs}</div>
+          <div class="emails">${emails}</div>
+        </div>
+        <div class="lines">${lines}</div>
+        <div class="cfoot">
+          <button class="btn primary" data-draft>${IC.mail} Draft email</button>
+          <button class="btn ghost" data-copyemails>Copy all emails</button>
+          <div class="draftwrap" data-draftwrap>
+            <div class="subj"><span class="lab">Subject</span><input data-subj readonly></div>
+            <textarea data-body spellcheck="true"></textarea>
+            <div class="draftbtns">
+              <button class="btn primary" data-copybody>${IC.copy} Copy email</button>
+              <button class="btn ghost" data-mailto>${IC.mail} Open in mail app</button>
+            </div>
           </div>
         </div>
+      </div>
+      <div class="cside">
+        <label class="emailed"><input type="checkbox" data-emailed ${st.emailed?"checked":""}>
+          <span class="todo">Mark emailed</span><span class="done">✓ Emailed</span></label>
+        <div class="nlab">Notes</div>
+        <textarea class="cnote" data-note placeholder="Add a comment…">${esc(st.note||"")}</textarea>
+        <div class="saved" data-saved>Saved ✓</div>
       </div>`;
+    if(st.emailed) card.classList.add("emailed-on");
     // wire draft
     const refreshDraft=()=>{const em=buildEmail(o);
       card.querySelector("[data-subj]").value=em.subject;
@@ -396,6 +432,20 @@ function render(){
     refreshDraft();
     card._refresh=refreshDraft;
     card._order=o;
+    // wire notes + emailed
+    const chk=card.querySelector("[data-emailed]"), note=card.querySelector("[data-note]"),
+          savedEl=card.querySelector("[data-saved]");
+    const flashSaved=()=>{savedEl.classList.add("show");clearTimeout(savedEl._t);
+      savedEl._t=setTimeout(()=>savedEl.classList.remove("show"),1200);};
+    chk.addEventListener("change",()=>{
+      card.classList.toggle("emailed-on",chk.checked);
+      window.STATUS[o.doc]={...(window.STATUS[o.doc]||{}),emailed:chk.checked,note:note.value};
+      window.saveStatus(o.doc,{emailed:chk.checked,note:note.value}); flashSaved();
+    });
+    let noteT;
+    note.addEventListener("input",()=>{clearTimeout(noteT);
+      noteT=setTimeout(()=>{window.STATUS[o.doc]={...(window.STATUS[o.doc]||{}),emailed:chk.checked,note:note.value};
+        window.saveStatus(o.doc,{emailed:chk.checked,note:note.value}); flashSaved();},600);});
     list.appendChild(card);
   });
 }
@@ -466,6 +516,16 @@ init();
 const supa = window.supabase.createClient(window.SUPA_URL, window.SUPA_KEY);
 const gate=$("#authGate"), appRoot=$("#appRoot"), authErr=$("#authErr"), signOutBtn=$("#signOut");
 function showErr(m){authErr.textContent=m||"";}
+async function loadStatuses(){
+  const {data,error}=await supa.from("order_status").select("doc,note,emailed");
+  window.STATUS={};
+  if(!error&&data){data.forEach(function(r){window.STATUS[r.doc]={note:r.note||"",emailed:!!r.emailed};});}
+}
+window.saveStatus=function(doc,patch){
+  supa.from("order_status").upsert({doc:doc,note:patch.note||"",emailed:!!patch.emailed,
+    updated_at:new Date().toISOString()},{onConflict:"doc"}).then(function(res){
+    if(res.error)console.warn("saveStatus failed",res.error);});
+};
 async function loadSnapshot(){
   const {data,error} = await supa.from("backorder_snapshot")
     .select("generated_at,payload").eq("id",1).maybeSingle();
@@ -473,6 +533,7 @@ async function loadSnapshot(){
   if(!data){D={orders:[],order_count:0,line_count:0};}
   else {D=data.payload||{orders:[]}; if(data.generated_at&&!D.generated){
     D.generated=new Date(data.generated_at).toLocaleString();}}
+  await loadStatuses();
   init();
   return true;
 }
