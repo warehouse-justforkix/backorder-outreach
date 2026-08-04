@@ -87,15 +87,19 @@ header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 8
 .cbody{min-width:0}
 .cside{border-left:1px solid var(--line-soft);background:var(--panel-2);
   padding:14px;display:flex;flex-direction:column;gap:10px}
-.cside .emailed{display:inline-flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;
-  color:var(--ink-soft);cursor:pointer;user-select:none;padding:4px 2px}
-.cside .emailed input{width:20px;height:20px;accent-color:var(--green-ink);cursor:pointer;margin:0}
-.card.emailed-on .cside{background:var(--green-bg)}
-.card.emailed-on{border-color:var(--green-line)}
-.card.emailed-on .cside .emailed{color:var(--green-ink)}
-.cside .emailed .done{display:none}
-.card.emailed-on .cside .emailed .todo{display:none}
-.card.emailed-on .cside .emailed .done{display:inline}
+.cside .chkrow{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;
+  color:var(--ink-soft);cursor:pointer;user-select:none;padding:2px}
+.cside .chkrow input{width:19px;height:19px;accent-color:var(--green-ink);cursor:pointer;margin:0;flex:none}
+.cside .chkrow.on{color:var(--green-ink)}
+.card.contacted-on .cside{background:var(--green-bg)}
+.card.contacted-on{border-color:var(--green-line)}
+.b-new{background:color-mix(in srgb,#7c3aed 15%,transparent);color:#6d28d9;
+  border:1px solid color-mix(in srgb,#7c3aed 38%,transparent)}
+@media (prefers-color-scheme:dark){.b-new{color:#c4b5fd}}
+:root[data-theme="dark"] .b-new{color:#c4b5fd}
+:root[data-theme="light"] .b-new{color:#6d28d9}
+.donecard{opacity:.96}
+.donecard .prod{white-space:pre-wrap}
 .cside .nlab{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
 .cside .cnote{flex:1;min-height:96px;border:1px solid var(--line);border-radius:10px;
   background:var(--panel);color:var(--ink);padding:10px 11px;font-family:var(--sans);
@@ -247,6 +251,7 @@ details.swap[open]>summary .chev{transform:rotate(90deg)}
       <button class="chip" data-f="disc" aria-pressed="false">Has discontinued <span class="n" id="c-disc">0</span></button>
       <button class="chip" data-f="back" aria-pressed="false">Backorder only <span class="n" id="c-back">0</span></button>
       <button class="chip" data-f="swap" aria-pressed="false">Swap available <span class="n" id="c-swap">0</span></button>
+      <button class="chip" data-f="donesec" aria-pressed="false">✓ Done <span class="n" id="c-donesec">0</span></button>
     </div>
     <div class="searchbox"><input id="search" type="search" placeholder="Search customer, SKU, order#…"></div>
   </div>
@@ -338,9 +343,40 @@ function swapTag(s,ln){
   if(s.size===ln.size)return '<span class="tag match">same size</span>';
   return '<span class="tag">alt</span>';
 }
+function renderDone(){
+  const list=$("#list"); const done=D.done||[];
+  $("#empty").textContent="No completed orders yet. An order moves here once its backordered items clear and the sales order is fully billed in NetSuite.";
+  $("#empty").style.display=done.length?"none":"block";
+  done.forEach(o=>{
+    const st=window.STATUS[o.doc]||{};
+    const card=document.createElement("div");card.className="card donecard";
+    card.innerHTML=`
+      <div class="cbody">
+        <div class="chead">
+          <div class="cust"><div class="name">${esc(o.customer)}</div>
+            <div class="cid">Order ${esc(o.order_ref||o.doc)}${o.order_date?" · ordered "+esc(o.order_date):""}${o.resolved_date?" · resolved "+esc(o.resolved_date):""}</div></div>
+          <div class="refs">
+            <div class="ref"><span class="lab">NS Order</span><span class="val">${esc(o.doc)}</span>
+              <button class="copy" data-copy="${esc(o.doc)}" data-lab="NS order #">${IC.copy}</button></div>
+            ${o.order_ref?`<div class="ref"><span class="lab">${esc(o.channel||"Order")}</span><span class="val">${esc(o.order_ref)}</span>
+              <button class="copy" data-copy="${esc(o.order_ref)}" data-lab="Order #">${IC.copy}</button></div>`:""}
+            <span class="badge b-swap">Billed ✓</span>
+          </div>
+        </div>
+      </div>
+      <div class="cside">
+        ${st.emailed?'<div class="chkrow on"><span>✓ Emailed</span></div>':""}
+        ${st.called?'<div class="chkrow on"><span>✓ Talked on phone</span></div>':""}
+        ${st.note?`<div class="nlab">Notes</div><div class="prod">${esc(st.note)}</div>`:""}
+      </div>`;
+    list.appendChild(card);
+  });
+}
 function render(){
   const list=$("#list");list.innerHTML="";
+  if(filter==="donesec"){renderDone();return;}
   const shown=D.orders.filter(matchOrder);
+  $("#empty").textContent="No orders match this filter.";
   $("#empty").style.display=shown.length?"none":"block";
   shown.forEach(o=>{
     if(!o._sel)o._sel=o.lines.map(l=>l.swaps.length?l.swaps[0].sku:null);
@@ -360,6 +396,7 @@ function render(){
                           : '<span class="badge b-discx">Discontinued · refund</span>')
         : '<span class="badge b-back">Backordered</span>';
       if(ln.swaps.length) badge+=` <span class="badge b-swap">${ln.swaps.length} swap${ln.swaps.length>1?"s":""} in stock</span>`;
+      if(ln.is_new) badge+=' <span class="badge b-new" title="Never had a received PO — brand new item">NEW</span>';
       let timing="";
       if(!ln.obsolete){
         const t=ln.timing;
@@ -418,13 +455,13 @@ function render(){
         </div>
       </div>
       <div class="cside">
-        <label class="emailed"><input type="checkbox" data-emailed ${st.emailed?"checked":""}>
-          <span class="todo">Mark emailed</span><span class="done">✓ Emailed</span></label>
+        <label class="chkrow${st.emailed?" on":""}"><input type="checkbox" data-emailed ${st.emailed?"checked":""}><span>Emailed</span></label>
+        <label class="chkrow${st.called?" on":""}"><input type="checkbox" data-called ${st.called?"checked":""}><span>Talked on phone</span></label>
         <div class="nlab">Notes</div>
         <textarea class="cnote" data-note placeholder="Add a comment…">${esc(st.note||"")}</textarea>
         <div class="saved" data-saved>Saved ✓</div>
       </div>`;
-    if(st.emailed) card.classList.add("emailed-on");
+    if(st.emailed||st.called) card.classList.add("contacted-on");
     // wire draft
     const refreshDraft=()=>{const em=buildEmail(o);
       card.querySelector("[data-subj]").value=em.subject;
@@ -432,20 +469,22 @@ function render(){
     refreshDraft();
     card._refresh=refreshDraft;
     card._order=o;
-    // wire notes + emailed
-    const chk=card.querySelector("[data-emailed]"), note=card.querySelector("[data-note]"),
-          savedEl=card.querySelector("[data-saved]");
+    // wire notes + emailed + called
+    const emailedChk=card.querySelector("[data-emailed]"), calledChk=card.querySelector("[data-called]"),
+          note=card.querySelector("[data-note]"), savedEl=card.querySelector("[data-saved]");
     const flashSaved=()=>{savedEl.classList.add("show");clearTimeout(savedEl._t);
       savedEl._t=setTimeout(()=>savedEl.classList.remove("show"),1200);};
-    chk.addEventListener("change",()=>{
-      card.classList.toggle("emailed-on",chk.checked);
-      window.STATUS[o.doc]={...(window.STATUS[o.doc]||{}),emailed:chk.checked,note:note.value};
-      window.saveStatus(o.doc,{emailed:chk.checked,note:note.value}); flashSaved();
-    });
+    const persist=()=>{
+      const patch={emailed:emailedChk.checked,called:calledChk.checked,note:note.value};
+      window.STATUS[o.doc]={...(window.STATUS[o.doc]||{}),...patch};
+      window.saveStatus(o.doc,patch);
+      card.classList.toggle("contacted-on", emailedChk.checked||calledChk.checked);
+      flashSaved();
+    };
+    [emailedChk,calledChk].forEach(chk=>chk.addEventListener("change",()=>{
+      chk.closest(".chkrow").classList.toggle("on",chk.checked); persist();}));
     let noteT;
-    note.addEventListener("input",()=>{clearTimeout(noteT);
-      noteT=setTimeout(()=>{window.STATUS[o.doc]={...(window.STATUS[o.doc]||{}),emailed:chk.checked,note:note.value};
-        window.saveStatus(o.doc,{emailed:chk.checked,note:note.value}); flashSaved();},600);});
+    note.addEventListener("input",()=>{clearTimeout(noteT);noteT=setTimeout(persist,600);});
     list.appendChild(card);
   });
 }
@@ -508,6 +547,7 @@ function init(){
   $("#c-disc").textContent=disc;
   $("#c-back").textContent=os.filter(o=>!o.has_discontinued).length;
   $("#c-swap").textContent=os.filter(o=>o.has_swaps).length;
+  $("#c-donesec").textContent=(D.done_count||0);
   render();
 }
 init();
@@ -517,12 +557,12 @@ const supa = window.supabase.createClient(window.SUPA_URL, window.SUPA_KEY);
 const gate=$("#authGate"), appRoot=$("#appRoot"), authErr=$("#authErr"), signOutBtn=$("#signOut");
 function showErr(m){authErr.textContent=m||"";}
 async function loadStatuses(){
-  const {data,error}=await supa.from("order_status").select("doc,note,emailed");
+  const {data,error}=await supa.from("order_status").select("doc,note,emailed,called");
   window.STATUS={};
-  if(!error&&data){data.forEach(function(r){window.STATUS[r.doc]={note:r.note||"",emailed:!!r.emailed};});}
+  if(!error&&data){data.forEach(function(r){window.STATUS[r.doc]={note:r.note||"",emailed:!!r.emailed,called:!!r.called};});}
 }
 window.saveStatus=function(doc,patch){
-  supa.from("order_status").upsert({doc:doc,note:patch.note||"",emailed:!!patch.emailed,
+  supa.from("order_status").upsert({doc:doc,note:patch.note||"",emailed:!!patch.emailed,called:!!patch.called,
     updated_at:new Date().toISOString()},{onConflict:"doc"}).then(function(res){
     if(res.error)console.warn("saveStatus failed",res.error);});
 };
