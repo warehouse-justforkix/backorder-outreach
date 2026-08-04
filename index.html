@@ -486,10 +486,10 @@ $("#search").addEventListener("input",e=>{q=e.target.value.trim().toLowerCase();
 /* ---- in-page Sync button → launches the Sync Backorders app via URL scheme ---- */
 $("#syncBtn").addEventListener("click",()=>{
   const btn=$("#syncBtn"), lbl=$("#syncLbl");
-  lbl.textContent="Syncing… (this tab will refresh)";
+  lbl.textContent="Checking\u2026";
   btn.disabled=true; btn.style.opacity=".7"; btn.style.cursor="default";
   // trigger the local sync app; on success it reloads this tab automatically
-  loadSnapshot().then(()=>{lbl.textContent="Refresh";btn.disabled=false;btn.style.opacity="";btn.style.cursor="pointer";toast("Refreshed");});
+  const __prev=(D&&D.generated)||"";loadSnapshot().then(()=>{lbl.textContent="Refresh";btn.disabled=false;btn.style.opacity="";btn.style.cursor="pointer";const __now=(D&&D.generated)||"";toast(__now&&__now!==__prev?("Updated \u2014 data from "+__now):("Up to date \u2014 data from "+(__now||"\u2014")));});
   // fallback re-enable if nothing happened (e.g. permission dialog dismissed)
   setTimeout(()=>{ if(document.visibilityState!=="hidden"){
     lbl.textContent="Sync now"; btn.disabled=false; btn.style.opacity=""; btn.style.cursor="pointer"; } },120000);
@@ -497,7 +497,7 @@ $("#syncBtn").addEventListener("click",()=>{
 
 /* ---- init stats ---- */
 function init(){
-  $("#gen").textContent=D.generated?("· "+D.generated):"";
+  $("#gen").textContent=D.generated?("Updated "+D.generated):"";
   const os=D.orders;
   $("#s-orders").textContent=D.order_count??os.length;
   $("#s-lines").textContent=D.line_count??os.reduce((a,o)=>a+o.lines.length,0);
