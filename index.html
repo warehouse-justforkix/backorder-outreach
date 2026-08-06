@@ -323,9 +323,13 @@ function buildEmail(o){
       }
     }
   });
-  paras.push(refundOnly && o.lines.length===1
-    ? "Terribly sorry for any inconvenience, have a wonderful rest of your day!"
-    : "Terribly sorry for any inconvenience. Please let me know how you would like to proceed, happy to help!");
+  const allNew = o.lines.every(ln=>ln.is_new && !ln.obsolete);
+  paras.push(
+    refundOnly && o.lines.length===1
+      ? "Terribly sorry for any inconvenience, have a wonderful rest of your day!"
+      : allNew
+        ? "Terribly sorry for any inconvenience. Please let me know if you have any questions in the meantime, happy to help!"
+        : "Terribly sorry for any inconvenience. Please let me know how you would like to proceed, happy to help!");
   return {subject:`Just For Kix — update on your order #${ref}`, body:paras.join("\n\n")};
 }
 
