@@ -313,10 +313,13 @@ function buildEmail(o){
       }
     }else{refundOnly=false;
       const eta=(ln.timing&&ln.timing.eta_text)||"soon";
+      const status = ln.is_new
+        ? "This is a brand-new item that we are awaiting our first shipment of"
+        : "This item is on backorder at the moment";
       if(sel){
-        paras.push(`It seems that we are unfortunately out of ${label}. This item is on backorder at the moment. We do have ${sel} available if you'd like to make the swap today and have it shipped right now. Otherwise we predict the ordered item will arrive at our warehouse ${eta} and will ship out to you once received.`);
+        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We do have ${sel} available if you'd like to make the swap today and have it shipped right now. Otherwise we expect the ordered item to arrive at our warehouse ${eta} and will ship out to you once received.`);
       }else{
-        paras.push(`It seems that we are unfortunately out of ${label}. This item is on backorder at the moment. We predict it will arrive at our warehouse ${eta} and will ship out to you once received.`);
+        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We expect it to arrive at our warehouse ${eta} and will ship out to you once received.`);
       }
     }
   });
