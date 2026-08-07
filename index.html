@@ -309,11 +309,15 @@ function buildEmail(o){
     const list=sels.length ? (sels.length===1?sels[0]
                  :sels.slice(0,-1).join(", ")+" or "+sels[sels.length-1]) : "";
     const many=sels.length>1;
+    const plural=ln.bo_qty>1;                          // more than one unit backordered
+    const theItems=plural?"these items":"this item";
+    const itPron=plural?"them":"it";
+    const orderedItem=plural?"the ordered items":"the ordered item";
     if(ln.obsolete){
       if(list){refundOnly=false;
-        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of. I reviewed our inventory and we do have ${list} available — would you like to swap to ${many?"one of those":"that"}? An additional option is to cancel and refund this item back to your original form of payment.`);
+        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of. I reviewed our inventory and we do have ${list} available — would you like to swap to ${many?"one of those":"that"}? An additional option is to cancel and refund ${theItems} back to your original form of payment.`);
       }else{
-        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of, and we do not have any nearing sizes or colorways to offer for swap. I can cancel and refund this item back to your original form of payment.`);
+        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of, and we do not have any nearing sizes or colorways to offer for swap. I can cancel and refund ${theItems} back to your original form of payment.`);
       }
     }else{refundOnly=false;
       const eta=(ln.timing&&ln.timing.eta_text)||"soon";
@@ -321,9 +325,9 @@ function buildEmail(o){
         ? "This is a brand-new item that we are awaiting our first shipment of"
         : "This item is on backorder at the moment";
       if(list){
-        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We do have ${list} available if you'd like to swap to ${many?"one of those":"that"} today and have it shipped right now. Otherwise we expect the ordered item to arrive at our warehouse ${eta} and will ship out to you once received.`);
+        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We do have ${list} available if you'd like to swap to ${many?"one of those":"that"} today and have ${itPron} shipped right now. Otherwise we expect ${orderedItem} to arrive at our warehouse ${eta} and will ship ${itPron} out to you once received.`);
       }else{
-        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We expect it to arrive at our warehouse ${eta} and will ship out to you once received.`);
+        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We expect ${itPron} to arrive at our warehouse ${eta} and will ship ${itPron} out to you once received.`);
       }
     }
   });
