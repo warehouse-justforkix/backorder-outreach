@@ -303,7 +303,8 @@ function buildEmail(o){
     `I am reaching out regarding your recent order, order #${ref}, placed on ${when}.`];
   let refundOnly=true;
   o.lines.forEach((ln,i)=>{
-    const label=`${ln.sku} (${ln.product})`;
+    const qn = (ln.bo_qty>1) ? `, with ${ln.bo_qty} backordered on your order` : "";
+    const label=`${ln.sku} (${ln.product})`+qn;
     const sel=o._sel[i]; // selected swap sku or null
     if(ln.obsolete){
       if(sel){refundOnly=false;
@@ -392,7 +393,7 @@ function render(){
     // header
     let refs=`<div class="ref"><span class="lab">NS Order</span><span class="val">${esc(o.doc)}</span>
       <button class="copy" data-copy="${esc(o.doc)}" data-lab="NS order #">${IC.copy}</button></div>`;
-    if(o.order_ref)refs+=`<div class="ref"><span class="lab">${esc(o.channel)}</span><span class="val">${esc(o.order_ref)}</span>
+    if(o.order_ref && o.order_ref!==o.doc)refs+=`<div class="ref"><span class="lab">${esc(o.channel)}</span><span class="val">${esc(o.order_ref)}</span>
       <button class="copy" data-copy="${esc(o.order_ref)}" data-lab="Order #">${IC.copy}</button></div>`;
     let emails=o.emails.map(e=>`<span class="email"><span class="addr">${esc(e)}</span>
       <button class="copy" data-copy="${esc(e)}" data-lab="Email">${IC.copy}</button></span>`).join("");
@@ -443,7 +444,7 @@ function render(){
       <div class="cbody">
         <div class="chead">
           <div class="cust"><div class="name">${esc(o.customer)}</div>
-            <div class="cid">Customer ${esc(o.customer_id)} · ordered ${esc(o.order_date)} · flagged ${esc(o.flagged)}</div></div>
+            <div class="cid">Customer ${esc(o.customer_id)} · ordered ${esc(o.order_date)} · flagged ${esc(o.flagged)}${o.phone_email?" · ☎ phone/email order":""}</div></div>
           <div class="refs">${refs}</div>
           <div class="emails">${emails}</div>
         </div>
@@ -452,7 +453,8 @@ function render(){
           <button class="btn primary" data-draft>${IC.mail} Draft email</button>
           <button class="btn ghost" data-copyemails>Copy all emails</button>
           <div class="draftwrap" data-draftwrap>
-            <div class="subj"><span class="lab">Subject</span><input data-subj readonly></div>
+            <div class="subj"><span class="lab">Subject</span><input data-subj readonly>
+            <button class="copy" data-copysubj title="Copy subject">${IC.copy}</button></div>
             <textarea data-body spellcheck="true"></textarea>
             <div class="draftbtns">
               <button class="btn primary" data-copybody>${IC.copy} Copy email</button>
@@ -516,6 +518,8 @@ document.addEventListener("click",e=>{
     w.classList.toggle("show");if(w.classList.contains("show"))w.scrollIntoView({behavior:"smooth",block:"nearest"});return;}
   const cb=e.target.closest("[data-copybody]");
   if(cb){copy(cb.closest(".cfoot").querySelector("[data-body]").value,"Email");return;}
+  const cs=e.target.closest("[data-copysubj]");
+  if(cs){copy(cs.closest(".cfoot").querySelector("[data-subj]").value,"Subject");return;}
   const ce=e.target.closest("[data-copyemails]");
   if(ce){const o=ce.closest(".card")._order;copy(o.emails.join(", "),"Emails");return;}
   const mt=e.target.closest("[data-mailto]");
