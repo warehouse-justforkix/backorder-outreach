@@ -541,10 +541,10 @@ $("#search").addEventListener("input",e=>{q=e.target.value.trim().toLowerCase();
 /* ---- in-page Sync button → launches the Sync Backorders app via URL scheme ---- */
 $("#syncBtn").addEventListener("click",()=>{
   const btn=$("#syncBtn"), lbl=$("#syncLbl");
-  lbl.textContent="Checking\u2026";
+  lbl.textContent="Refreshing\u2026";
   btn.disabled=true; btn.style.opacity=".7"; btn.style.cursor="default";
   // trigger the local sync app; on success it reloads this tab automatically
-  const __prev=(D&&D.generated)||"";loadSnapshot().then(()=>{lbl.textContent="Refresh";btn.disabled=false;btn.style.opacity="";btn.style.cursor="pointer";const __now=(D&&D.generated)||"";toast(__now&&__now!==__prev?("Updated \u2014 data from "+__now):("Up to date \u2014 data from "+(__now||"\u2014")));});
+  liveRefresh(btn,lbl);
   // fallback re-enable if nothing happened (e.g. permission dialog dismissed)
   setTimeout(()=>{ if(document.visibilityState!=="hidden"){
     lbl.textContent="Sync now"; btn.disabled=false; btn.style.opacity=""; btn.style.cursor="pointer"; } },120000);
@@ -599,10 +599,29 @@ async function loadSnapshot(){
   }
   if(!data){D={orders:[],order_count:0,line_count:0};}
   else {D=data.payload||{orders:[]}; if(data.generated_at){
-    D.generated=new Date(data.generated_at).toLocaleString();}}
+    D.generated=new Date(data.generated_at).toLocaleString(); window.__snapIso=data.generated_at;}}
   await loadStatuses();
   init();
   return true;
+}
+function resetRefreshBtn(btn,lbl){ lbl.textContent="Refresh"; btn.disabled=false; btn.style.opacity=""; btn.style.cursor="pointer"; }
+async function liveRefresh(btn,lbl){
+  lbl.textContent="Refreshing from NetSuite…"; btn.disabled=true; btn.style.opacity=".7"; btn.style.cursor="default";
+  const {error}=await supa.from("refresh_request").upsert({id:1,requested_at:new Date().toISOString()},{onConflict:"id"});
+  if(error){ toast("Couldn't request refresh: "+error.message); resetRefreshBtn(btn,lbl); return; }
+  const t0=Date.now();
+  const timer=setInterval(async()=>{
+    const {data}=await supa.from("backorder_snapshot").select("generated_at").eq("id",1).maybeSingle();
+    if(data && data.generated_at && data.generated_at!==window.__snapIso){
+      clearInterval(timer);
+      await loadSnapshot();
+      resetRefreshBtn(btn,lbl);
+      toast("Updated — data from "+new Date(data.generated_at).toLocaleString());
+    } else if(Date.now()-t0>120000){
+      clearInterval(timer); resetRefreshBtn(btn,lbl);
+      toast("Still working — make sure your Mac is on and awake, then try again.");
+    }
+  },3000);
 }
 async function enterApp(){
   gate.hidden=true; appRoot.hidden=false; signOutBtn.hidden=false; await loadSnapshot();
