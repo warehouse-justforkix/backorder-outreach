@@ -573,12 +573,23 @@ window.saveStatus=function(doc,patch){
     updated_at:new Date().toISOString()},{onConflict:"doc"}).then(function(res){
     if(res.error)console.warn("saveStatus failed",res.error);});
 };
+function backToLogin(msg){
+  appRoot.hidden=true; signOutBtn.hidden=true; gate.hidden=false;
+  $("#stepEmail")&&($("#stepEmail").hidden=false);
+  showErr(msg||"Your session expired — please sign in again.");
+}
 async function loadSnapshot(){
+  // make sure we still have a valid (auto-refreshed) session before fetching
+  const {data:{session}} = await supa.auth.getSession();
+  if(!session){ backToLogin(); return false; }
   const {data,error} = await supa.from("backorder_snapshot")
     .select("generated_at,payload").eq("id",1).maybeSingle();
-  if(error){showErr("Could not load data: "+error.message);return false;}
+  if(error){
+    if(/JWT|token|expired|auth/i.test(error.message||"")){ backToLogin(); return false; }
+    showErr("Could not load data: "+error.message); return false;
+  }
   if(!data){D={orders:[],order_count:0,line_count:0};}
-  else {D=data.payload||{orders:[]}; if(data.generated_at&&!D.generated){
+  else {D=data.payload||{orders:[]}; if(data.generated_at){
     D.generated=new Date(data.generated_at).toLocaleString();}}
   await loadStatuses();
   init();
@@ -591,6 +602,9 @@ async function checkSession(){
   const {data:{session}} = await supa.auth.getSession();
   if(session){ enterApp(); }
 }
+// if the tab regains focus after sleeping, re-check the session so a stale one re-prompts
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && !appRoot.hidden){
+  supa.auth.getSession().then(({data:{session}})=>{ if(!session) backToLogin(); }); }});
 async function doSignIn(){
   const email=$("#authEmail").value.trim(), password=$("#authPass").value; showErr("");
   if(!email||!password){showErr("Enter your email and password.");return;}
