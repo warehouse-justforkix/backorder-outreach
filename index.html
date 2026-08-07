@@ -297,8 +297,37 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const mdDate=s=>{const p=(s||"").split("/");return p.length>=2?p[0]+"/"+p[1]:s;};
 
 /* ---- email builder (reactive to selected swaps) ---- */
+function swapList(o,i){const s=o._sel[i]||[];return s.length?(s.length===1?s[0]:s.slice(0,-1).join(", ")+" or "+s[s.length-1]):"";}
+function closingLine(o){
+  const allNew=o.lines.every(ln=>ln.is_new&&!ln.obsolete);
+  return allNew
+    ? "Terribly sorry for any inconvenience. Please let me know if you have any questions in the meantime, happy to help!"
+    : "Terribly sorry for any inconvenience. Please let me know how you would like to proceed, happy to help!";
+}
+/* multiple items → one consolidated list, no repeated boilerplate */
+function buildMulti(o,g,ref,when){
+  const bullets=o.lines.map((ln,i)=>{
+    const list=swapList(o,i), plural=ln.bo_qty>1, pron=plural?"them":"it";
+    const item=`${ln.sku} (${ln.product})${plural?` (${ln.bo_qty} backordered)`:""}`;
+    if(ln.obsolete){
+      return list
+        ? `${item} — discontinued, so we won't be restocking ${pron}. We could swap ${pron} for ${list}, or cancel and refund.`
+        : `${item} — discontinued, so we won't be restocking ${pron}. We can cancel and refund ${pron}.`;
+    }
+    const eta=(ln.timing&&ln.timing.eta_text)||"soon";
+    const word=ln.is_new?"a brand-new item we're awaiting our first shipment of":"on backorder";
+    return list
+      ? `${item} — ${word}. We could swap ${pron} for ${list} to ship right away, or expect ${pron} to arrive ${eta}.`
+      : `${item} — ${word}. We expect ${pron} to arrive ${eta}.`;
+  });
+  const body=`Hi ${g},\n\nI am reaching out regarding your recent order, order #${ref}, placed on ${when}. `
+    +`It seems a few items on your order are unfortunately unavailable right now:\n\n`
+    +bullets.map(b=>"• "+b).join("\n")+`\n\n${closingLine(o)}`;
+  return {subject:`Just For Kix — update on your order #${ref}`, body:body};
+}
 function buildEmail(o){
   const g=o.greeting||"there", ref=o.order_ref||o.doc, when=mdDate(o.order_date);
+  if(o.lines.length>1) return buildMulti(o,g,ref,when);
   let paras=[`Hi ${g},`,
     `I am reaching out regarding your recent order, order #${ref}, placed on ${when}.`];
   let refundOnly=true;
