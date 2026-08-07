@@ -360,6 +360,8 @@ function renderDone(){
   $("#empty").style.display=done.length?"none":"block";
   done.forEach(o=>{
     const st=window.STATUS[o.doc]||{};
+    const slabel=o.status_label||"Done";
+    const sclass=/cancel/i.test(slabel)?"b-discx":/billed|closed/i.test(slabel)?"b-swap":"b-back";
     const card=document.createElement("div");card.className="card donecard";
     card.innerHTML=`
       <div class="cbody">
@@ -371,7 +373,7 @@ function renderDone(){
               <button class="copy" data-copy="${esc(o.doc)}" data-lab="NS order #">${IC.copy}</button></div>
             ${o.order_ref?`<div class="ref"><span class="lab">${esc(o.channel||"Order")}</span><span class="val">${esc(o.order_ref)}</span>
               <button class="copy" data-copy="${esc(o.order_ref)}" data-lab="Order #">${IC.copy}</button></div>`:""}
-            <span class="badge b-swap">Billed ✓</span>
+            <span class="badge ${sclass}">${esc(slabel)}</span>
           </div>
         </div>
       </div>
