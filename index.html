@@ -305,10 +305,13 @@ function buildEmail(o){
   o.lines.forEach((ln,i)=>{
     const qn = (ln.bo_qty>1) ? `, with ${ln.bo_qty} backordered on your order` : "";
     const label=`${ln.sku} (${ln.product})`+qn;
-    const sel=o._sel[i]; // selected swap sku or null
+    const sels=o._sel[i]||[];                         // selected swap SKUs (may be multiple)
+    const list=sels.length ? (sels.length===1?sels[0]
+                 :sels.slice(0,-1).join(", ")+" or "+sels[sels.length-1]) : "";
+    const many=sels.length>1;
     if(ln.obsolete){
-      if(sel){refundOnly=false;
-        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of. I reviewed our inventory and we do have ${sel} available — would you like to swap to that? An additional option is to cancel and refund this item back to your original form of payment.`);
+      if(list){refundOnly=false;
+        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of. I reviewed our inventory and we do have ${list} available — would you like to swap to ${many?"one of those":"that"}? An additional option is to cancel and refund this item back to your original form of payment.`);
       }else{
         paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of, and we do not have any nearing sizes or colorways to offer for swap. I can cancel and refund this item back to your original form of payment.`);
       }
@@ -317,8 +320,8 @@ function buildEmail(o){
       const status = ln.is_new
         ? "This is a brand-new item that we are awaiting our first shipment of"
         : "This item is on backorder at the moment";
-      if(sel){
-        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We do have ${sel} available if you'd like to make the swap today and have it shipped right now. Otherwise we expect the ordered item to arrive at our warehouse ${eta} and will ship out to you once received.`);
+      if(list){
+        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We do have ${list} available if you'd like to swap to ${many?"one of those":"that"} today and have it shipped right now. Otherwise we expect the ordered item to arrive at our warehouse ${eta} and will ship out to you once received.`);
       }else{
         paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We expect it to arrive at our warehouse ${eta} and will ship out to you once received.`);
       }
@@ -387,7 +390,7 @@ function render(){
   $("#empty").textContent="No orders match this filter.";
   $("#empty").style.display=shown.length?"none":"block";
   shown.forEach(o=>{
-    if(!o._sel)o._sel=o.lines.map(l=>l.swaps.length?l.swaps[0].sku:null);
+    if(!o._sel)o._sel=o.lines.map(l=>l.swaps.length?[l.swaps[0].sku]:[]);
     const card=document.createElement("div");
     card.className="card"+(o.needs_refund_only?" urgent":"");
     // header
@@ -417,11 +420,12 @@ function render(){
       // swap dropdown
       let swap="";
       if(ln.swaps.length){
-        const rows=ln.swaps.map(s=>`<div class="swaprow" data-sku="${esc(s.sku)}">
+        const rows=ln.swaps.map(s=>{const on=(o._sel[i]||[]).includes(s.sku);
+          return `<div class="swaprow${on?" sel":""}" data-sku="${esc(s.sku)}">
           <span class="ssku">${esc(s.sku)}</span>${swapTag(s,ln)}
           <span class="av">avail <b>${s.avail}</b></span>
-          <button class="pick" data-oi="${i}" data-sku="${esc(s.sku)}">Use in email</button>
-          <button class="copy" data-copy="${esc(s.sku)}" data-lab="SKU">${IC.copy}</button></div>`).join("");
+          <button class="pick${on?" on":""}" data-oi="${i}" data-sku="${esc(s.sku)}">${on?"✓ In email":"Use in email"}</button>
+          <button class="copy" data-copy="${esc(s.sku)}" data-lab="SKU">${IC.copy}</button></div>`;}).join("");
         swap=`<details class="swap"><summary><span class="chev">${IC.chev}</span>
           Swap options · ${ln.swaps.length} in stock @ warehouse</summary>
           <div class="swaplist" data-swaplist="${i}">${rows}</div></details>`;
@@ -505,13 +509,14 @@ document.addEventListener("click",e=>{
   const pick=e.target.closest(".pick");
   if(pick){
     const card=pick.closest(".card"),o=card._order,oi=+pick.dataset.oi,sku=pick.dataset.sku;
-    o._sel[oi]=(o._sel[oi]===sku)?null:sku; // toggle
-    // update row highlight + button state
-    const box=card.querySelector(`[data-swaplist="${oi}"]`);
-    $$(".swaprow",box).forEach(r=>{const on=r.dataset.sku===o._sel[oi];
-      r.classList.toggle("sel",on);r.querySelector(".pick").classList.toggle("on",on);
-      r.querySelector(".pick").textContent=on?"✓ In email":"Use in email";});
-    card._refresh();toast(o._sel[oi]?"Swap set — draft updated":"Swap cleared");return;
+    const arr=o._sel[oi]||(o._sel[oi]=[]);
+    const idx=arr.indexOf(sku);
+    if(idx>=0) arr.splice(idx,1); else arr.push(sku);   // toggle membership (multi-select)
+    const on=arr.includes(sku), row=pick.closest(".swaprow");
+    row.classList.toggle("sel",on);
+    pick.classList.toggle("on",on);
+    pick.textContent=on?"✓ In email":"Use in email";
+    card._refresh();toast(on?"Added to email":"Removed from email");return;
   }
   const df=e.target.closest("[data-draft]");
   if(df){const w=df.closest(".cfoot").querySelector("[data-draftwrap]");
