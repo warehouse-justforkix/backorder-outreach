@@ -298,6 +298,13 @@ const mdDate=s=>{const p=(s||"").split("/");return p.length>=2?p[0]+"/"+p[1]:s;}
 
 /* ---- email builder (reactive to selected swaps) ---- */
 function swapList(o,i){const s=o._sel[i]||[];return s.length?(s.length===1?s[0]:s.slice(0,-1).join(", ")+" or "+s[s.length-1]):"";}
+// true when the nearest SELECTED swap is a big size jump (no nearing size available)
+function swapFar(o,i,ln){
+  const sel=o._sel[i]||[]; if(!sel.length) return false;
+  let minD=99;
+  sel.forEach(sku=>{const s=(ln.swaps||[]).find(x=>x.sku===sku); if(s&&typeof s.dist==="number") minD=Math.min(minD,s.dist);});
+  return minD>=4;
+}
 function closingLine(o){
   const allNew=o.lines.every(ln=>ln.is_new&&!ln.obsolete);
   return allNew
@@ -309,16 +316,20 @@ function buildMulti(o,g,ref,when){
   const bullets=o.lines.map((ln,i)=>{
     const list=swapList(o,i), plural=ln.bo_qty>1, pron=plural?"them":"it";
     const item=`${ln.sku} (${ln.product})${plural?` (${ln.bo_qty} backordered)`:""}`;
+    const far=swapFar(o,i,ln), many=(o._sel[i]||[]).length>1;
+    const nextBest=`The next best size${many?"s":""} we have available ${many?"are":"is"} ${list}`;
     if(ln.obsolete){
-      return list
-        ? `${item} — discontinued, so we won't be restocking ${pron}. We could swap ${pron} for ${list}, or cancel and refund.`
-        : `${item} — discontinued, so we won't be restocking ${pron}. We can cancel and refund ${pron}.`;
+      if(!list) return `${item} — discontinued, so we won't be restocking ${pron}. We can cancel and refund ${pron}.`;
+      return far
+        ? `${item} — discontinued, so we won't be restocking ${pron}. ${nextBest} to swap to, or we can cancel and refund.`
+        : `${item} — discontinued, so we won't be restocking ${pron}. We could swap ${pron} for ${list}, or cancel and refund.`;
     }
     const eta=(ln.timing&&ln.timing.eta_text)||"soon";
     const word=ln.is_new?"a brand-new item we're awaiting our first shipment of":"on backorder";
-    return list
-      ? `${item} — ${word}. We could swap ${pron} for ${list} to ship right away, or expect ${pron} to arrive ${eta}.`
-      : `${item} — ${word}. We expect ${pron} to arrive ${eta}.`;
+    if(!list) return `${item} — ${word}. We expect ${pron} to arrive ${eta}.`;
+    return far
+      ? `${item} — ${word}. ${nextBest} to swap to and ship right away, or expect ${pron} to arrive ${eta}.`
+      : `${item} — ${word}. We could swap ${pron} for ${list} to ship right away, or expect ${pron} to arrive ${eta}.`;
   });
   const body=`Hi ${g},\n\nI am reaching out regarding your recent order, order #${ref}, placed on ${when}. `
     +`It seems a few items on your order are unfortunately unavailable right now:\n\n`
@@ -342,9 +353,14 @@ function buildEmail(o){
     const theItems=plural?"these items":"this item";
     const itPron=plural?"them":"it";
     const orderedItem=plural?"the ordered items":"the ordered item";
+    const far=swapFar(o,i,ln);
+    const nextBest=`the next best size${many?"s":""} we have available ${many?"are":"is"} ${list}`;
     if(ln.obsolete){
       if(list){refundOnly=false;
-        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of. I reviewed our inventory and we do have ${list} available — would you like to swap to ${many?"one of those":"that"}? An additional option is to cancel and refund ${theItems} back to your original form of payment.`);
+        const offer = far
+          ? `while we don't have a nearing size, ${nextBest} — would you like to swap to ${many?"one of those":"that"}?`
+          : `we do have ${list} available — would you like to swap to ${many?"one of those":"that"}?`;
+        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of. I reviewed our inventory and ${offer} An additional option is to cancel and refund ${theItems} back to your original form of payment.`);
       }else{
         paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of, and we do not have any nearing sizes or colorways to offer for swap. I can cancel and refund ${theItems} back to your original form of payment.`);
       }
@@ -354,7 +370,10 @@ function buildEmail(o){
         ? "This is a brand-new item that we are awaiting our first shipment of"
         : "This item is on backorder at the moment";
       if(list){
-        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We do have ${list} available if you'd like to swap to ${many?"one of those":"that"} today and have ${itPron} shipped right now. Otherwise we expect ${orderedItem} to arrive at our warehouse ${eta} and will ship ${itPron} out to you once received.`);
+        const offer = far
+          ? `While we don't have a nearing size, ${nextBest}, which we could swap to today and have ${itPron} shipped right now.`
+          : `We do have ${list} available if you'd like to swap to ${many?"one of those":"that"} today and have ${itPron} shipped right now.`;
+        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. ${offer} Otherwise we expect ${orderedItem} to arrive at our warehouse ${eta} and will ship ${itPron} out to you once received.`);
       }else{
         paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We expect ${itPron} to arrive at our warehouse ${eta} and will ship ${itPron} out to you once received.`);
       }
