@@ -254,6 +254,8 @@ details.swap[open]>summary .chev{transform:rotate(90deg)}
       <button class="chip" data-f="disc" aria-pressed="false">Has discontinued <span class="n" id="c-disc">0</span></button>
       <button class="chip" data-f="back" aria-pressed="false">Backorder only <span class="n" id="c-back">0</span></button>
       <button class="chip" data-f="swap" aria-pressed="false">Swap available <span class="n" id="c-swap">0</span></button>
+      <button class="chip" data-f="uncontacted" aria-pressed="false">Not contacted yet <span class="n" id="c-uncontacted">0</span></button>
+      <button class="chip" data-f="contacted" aria-pressed="false">✓ Communicated with <span class="n" id="c-contacted">0</span></button>
       <button class="chip" data-f="donesec" aria-pressed="false">✓ Done <span class="n" id="c-donesec">0</span></button>
     </div>
     <div class="searchbox"><input id="search" type="search" placeholder="Search customer, SKU, order#…"></div>
@@ -403,12 +405,21 @@ function matchOrder(o){
   if(q){const hay=(o.customer+" "+o.doc+" "+o.order_ref+" "+o.emails.join(" ")+" "+
     o.lines.map(l=>l.sku+" "+l.product).join(" ")).toLowerCase();
     if(!hay.includes(q))return false;}
+  const st=window.STATUS[o.doc]||{}, contacted=!!(st.emailed||st.called);
   if(filter==="all")return true;
   if(filter==="refund")return o.needs_refund_only;
   if(filter==="disc")return o.has_discontinued;
   if(filter==="back")return !o.has_discontinued;
   if(filter==="swap")return o.has_swaps;
+  if(filter==="contacted")return contacted;
+  if(filter==="uncontacted")return !contacted;
   return true;
+}
+function refreshContactChips(){
+  const os=D.orders||[];
+  const c=os.filter(o=>{const s=window.STATUS[o.doc]||{};return s.emailed||s.called;}).length;
+  $("#c-contacted").textContent=c;
+  $("#c-uncontacted").textContent=os.length-c;
 }
 function swapTag(s,ln){
   if(s.same_color)return '<span class="tag match">same color</span>';
@@ -566,7 +577,9 @@ function render(){
       flashSaved();
     };
     [emailedChk,calledChk].forEach(chk=>chk.addEventListener("change",()=>{
-      chk.closest(".chkrow").classList.toggle("on",chk.checked); persist();}));
+      chk.closest(".chkrow").classList.toggle("on",chk.checked); persist();
+      refreshContactChips();
+      if(filter==="contacted"||filter==="uncontacted") render();}));
     let noteT;
     note.addEventListener("input",()=>{clearTimeout(noteT);noteT=setTimeout(persist,600);});
     list.appendChild(card);
@@ -637,6 +650,7 @@ function init(){
   $("#c-back").textContent=os.filter(o=>!o.has_discontinued).length;
   $("#c-swap").textContent=os.filter(o=>o.has_swaps).length;
   $("#c-donesec").textContent=(D.done_count||0);
+  refreshContactChips();
   render();
 }
 init();
