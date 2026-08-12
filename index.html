@@ -298,12 +298,12 @@ const mdDate=s=>{const p=(s||"").split("/");return p.length>=2?p[0]+"/"+p[1]:s;}
 
 /* ---- email builder (reactive to selected swaps) ---- */
 function swapList(o,i){const s=o._sel[i]||[];return s.length?(s.length===1?s[0]:s.slice(0,-1).join(", ")+" or "+s[s.length-1]):"";}
-// true when the nearest SELECTED swap is a big size jump (no nearing size available)
+// true when the nearest SELECTED swap is 2+ sizes away (not a nearing size)
 function swapFar(o,i,ln){
   const sel=o._sel[i]||[]; if(!sel.length) return false;
-  let minD=99;
-  sel.forEach(sku=>{const s=(ln.swaps||[]).find(x=>x.sku===sku); if(s&&typeof s.dist==="number") minD=Math.min(minD,s.dist);});
-  return minD>=4;
+  let minS=Infinity;
+  sel.forEach(sku=>{const s=(ln.swaps||[]).find(x=>x.sku===sku); if(s&&typeof s.steps==="number") minS=Math.min(minS,s.steps);});
+  return minS!==Infinity && minS>=2;
 }
 function closingLine(o){
   const allNew=o.lines.every(ln=>ln.is_new&&!ln.obsolete);
