@@ -184,6 +184,9 @@ details.swap[open]>summary .chev{transform:rotate(90deg)}
 .draftwrap textarea{width:100%;min-height:230px;border:1px solid var(--line);border-radius:10px;background:var(--panel);
   color:var(--ink);padding:14px;font-family:var(--sans);font-size:13.5px;line-height:1.55;resize:vertical}
 .draftwrap textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.timingwrap{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft)}
+.timingwrap textarea{min-height:150px}
+.timingwrap .nlab{margin-bottom:6px}
 .subj{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
 .subj .lab{color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;font-size:10px;font-weight:700}
 .subj input{flex:1;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);
@@ -311,25 +314,25 @@ function closingLine(o){
     ? "Terribly sorry for any inconvenience. Please let me know if you have any questions in the meantime, happy to help!"
     : "Terribly sorry for any inconvenience. Please let me know how you would like to proceed, happy to help!";
 }
-/* multiple items → one consolidated list, no repeated boilerplate */
+/* MAIN email — informs + offers swaps. No arrival dates, no refund offer.
+   (Arrival timing is a separate "if they ask" reply — see buildTimingEmail.) */
 function buildMulti(o,g,ref,when){
   const bullets=o.lines.map((ln,i)=>{
     const list=swapList(o,i), plural=ln.bo_qty>1, pron=plural?"them":"it";
     const item=`${ln.sku} (${ln.product})${plural?` (${ln.bo_qty} backordered)`:""}`;
     const far=swapFar(o,i,ln), many=(o._sel[i]||[]).length>1;
-    const nextBest=`The next best size${many?"s":""} we have available ${many?"are":"is"} ${list}`;
+    const nextBest=`the next best size${many?"s":""} we have available ${many?"are":"is"} ${list} to swap to`;
     if(ln.obsolete){
-      if(!list) return `${item} — discontinued, so we won't be restocking ${pron}. We can cancel and refund ${pron}.`;
+      if(!list) return `${item} — discontinued, so we won't be receiving more of ${pron}, and we don't have a nearing size or colorway to offer as a swap.`;
       return far
-        ? `${item} — discontinued, so we won't be restocking ${pron}. ${nextBest} to swap to, or we can cancel and refund.`
-        : `${item} — discontinued, so we won't be restocking ${pron}. We could swap ${pron} for ${list}, or cancel and refund.`;
+        ? `${item} — discontinued, so we won't be receiving more; ${nextBest}.`
+        : `${item} — discontinued, so we won't be receiving more; we do have ${list} available to swap to.`;
     }
-    const eta=(ln.timing&&ln.timing.eta_text)||"soon";
     const word=ln.is_new?"a brand-new item we're awaiting our first shipment of":"on backorder";
-    if(!list) return `${item} — ${word}. We expect ${pron} to arrive ${eta}.`;
+    if(!list) return `${item} — ${word}; we'll get ${pron} shipped out to you as soon as ${plural?"they're":"it's"} available.`;
     return far
-      ? `${item} — ${word}. ${nextBest} to swap to and ship right away, or expect ${pron} to arrive ${eta}.`
-      : `${item} — ${word}. We could swap ${pron} for ${list} to ship right away, or expect ${pron} to arrive ${eta}.`;
+      ? `${item} — ${word}; ${nextBest} and ship right away.`
+      : `${item} — ${word}; we do have ${list} available to swap to and ship right away.`;
   });
   const body=`Hi ${g},\n\nI am reaching out regarding your recent order, order #${ref}, placed on ${when}. `
     +`It seems a few items on your order are unfortunately unavailable right now:\n\n`
@@ -341,52 +344,58 @@ function buildEmail(o){
   if(o.lines.length>1) return buildMulti(o,g,ref,when);
   let paras=[`Hi ${g},`,
     `I am reaching out regarding your recent order, order #${ref}, placed on ${when}.`];
-  let refundOnly=true;
   o.lines.forEach((ln,i)=>{
     const qn = (ln.bo_qty>1) ? `, with ${ln.bo_qty} backordered on your order` : "";
     const label=`${ln.sku} (${ln.product})`+qn;
-    const sels=o._sel[i]||[];                         // selected swap SKUs (may be multiple)
+    const sels=o._sel[i]||[];
     const list=sels.length ? (sels.length===1?sels[0]
                  :sels.slice(0,-1).join(", ")+" or "+sels[sels.length-1]) : "";
-    const many=sels.length>1;
-    const plural=ln.bo_qty>1;                          // more than one unit backordered
-    const theItems=plural?"these items":"this item";
-    const itPron=plural?"them":"it";
-    const orderedItem=plural?"the ordered items":"the ordered item";
+    const many=sels.length>1, plural=ln.bo_qty>1, itPron=plural?"them":"it";
     const far=swapFar(o,i,ln);
     const nextBest=`the next best size${many?"s":""} we have available ${many?"are":"is"} ${list}`;
     if(ln.obsolete){
-      if(list){refundOnly=false;
+      if(list){
         const offer = far
-          ? `while we don't have a nearing size, ${nextBest} — would you like to swap to ${many?"one of those":"that"}?`
-          : `we do have ${list} available — would you like to swap to ${many?"one of those":"that"}?`;
-        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of. I reviewed our inventory and ${offer} An additional option is to cancel and refund ${theItems} back to your original form of payment.`);
+          ? `While we don't have a nearing size, ${nextBest} — would you like to swap to ${many?"one of those":"that"}?`
+          : `That said, we do have ${list} available — would you like to swap to ${many?"one of those":"that"}?`;
+        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of. ${offer}`);
       }else{
-        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of, and we do not have any nearing sizes or colorways to offer for swap. I can cancel and refund ${theItems} back to your original form of payment.`);
+        paras.push(`It seems that we are unfortunately out of ${label}. This is a discontinued item that we will no longer be receiving stock of, and we don't currently have a nearing size or colorway to offer as a swap.`);
       }
-    }else{refundOnly=false;
-      const eta=(ln.timing&&ln.timing.eta_text)||"soon";
+    }else{
       const status = ln.is_new
         ? "This is a brand-new item that we are awaiting our first shipment of"
         : "This item is on backorder at the moment";
       if(list){
         const offer = far
-          ? `While we don't have a nearing size, ${nextBest}, which we could swap to today and have ${itPron} shipped right now.`
-          : `We do have ${list} available if you'd like to swap to ${many?"one of those":"that"} today and have ${itPron} shipped right now.`;
-        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. ${offer} Otherwise we expect ${orderedItem} to arrive at our warehouse ${eta} and will ship ${itPron} out to you once received.`);
+          ? `While we don't have a nearing size, ${nextBest}, which we could swap to and ship right out to you.`
+          : `we do have ${list} available if you'd like to swap to ${many?"one of those":"that"} and have ${itPron} shipped right out to you.`;
+        paras.push(`It seems that we are unfortunately out of ${label}. ${status}${far?". ":", but "}${offer}`);
       }else{
-        paras.push(`It seems that we are unfortunately out of ${label}. ${status}. We expect ${itPron} to arrive at our warehouse ${eta} and will ship ${itPron} out to you once received.`);
+        paras.push(`It seems that we are unfortunately out of ${label}. ${status}, and we'll get ${itPron} shipped out to you just as soon as ${plural?"they're":"it's"} available.`);
       }
     }
   });
-  const allNew = o.lines.every(ln=>ln.is_new && !ln.obsolete);
-  paras.push(
-    refundOnly && o.lines.length===1
-      ? "Terribly sorry for any inconvenience, have a wonderful rest of your day!"
-      : allNew
-        ? "Terribly sorry for any inconvenience. Please let me know if you have any questions in the meantime, happy to help!"
-        : "Terribly sorry for any inconvenience. Please let me know how you would like to proceed, happy to help!");
+  paras.push(closingLine(o));
   return {subject:`Just For Kix — update on your order #${ref}`, body:paras.join("\n\n")};
+}
+/* separate reply used ONLY if the customer asks when it will arrive */
+function buildTimingEmail(o){
+  const g=o.greeting||"there", ref=o.order_ref||o.doc;
+  const items=o.lines.filter(ln=>!ln.obsolete);   // only backordered/new items have arrival timing
+  if(!items.length) return null;
+  const etaOf=ln=>(ln.timing&&ln.timing.eta_text)||"soon";
+  let mid;
+  if(items.length===1){
+    const ln=items[0], pron=ln.bo_qty>1?"them":"it";
+    mid=`We expect ${ln.sku} (${ln.product}) to arrive at our warehouse ${etaOf(ln)}, and we'll ship ${pron} out to you just as soon as it's received.`;
+  }else{
+    mid="Here's what we're expecting:\n\n"
+      +items.map(ln=>`• ${ln.sku} (${ln.product}) — expected to arrive ${etaOf(ln)}.`).join("\n")
+      +"\n\nWe'll ship each item out as soon as it's received.";
+  }
+  const body=`Hi ${g},\n\nThanks for checking in on the timing for your order #${ref}. ${mid}\n\nPlease let me know if you have any other questions, happy to help!`;
+  return {subject:`Just For Kix — timing on your order #${ref}`, body:body};
 }
 
 /* ---- render ---- */
@@ -518,6 +527,11 @@ function render(){
               <button class="btn primary" data-copybody>${IC.copy} Copy email</button>
               <button class="btn ghost" data-mailto>${IC.mail} Open in mail app</button>
             </div>
+            <div class="timingwrap" data-timingwrap hidden>
+              <div class="nlab">Shipping-timeline reply — send only if they ask when it will arrive</div>
+              <textarea data-timing spellcheck="true"></textarea>
+              <div class="draftbtns"><button class="btn ghost" data-copytiming>${IC.copy} Copy timing reply</button></div>
+            </div>
           </div>
         </div>
       </div>
@@ -532,7 +546,10 @@ function render(){
     // wire draft
     const refreshDraft=()=>{const em=buildEmail(o);
       card.querySelector("[data-subj]").value=em.subject;
-      card.querySelector("[data-body]").value=em.body;};
+      card.querySelector("[data-body]").value=em.body;
+      const tw=card.querySelector("[data-timingwrap]"), tm=buildTimingEmail(o);
+      if(tm){tw.hidden=false; card.querySelector("[data-timing]").value=tm.body;}
+      else{tw.hidden=true;}};
     refreshDraft();
     card._refresh=refreshDraft;
     card._order=o;
@@ -577,6 +594,8 @@ document.addEventListener("click",e=>{
     w.classList.toggle("show");if(w.classList.contains("show"))w.scrollIntoView({behavior:"smooth",block:"nearest"});return;}
   const cb=e.target.closest("[data-copybody]");
   if(cb){copy(cb.closest(".cfoot").querySelector("[data-body]").value,"Email");return;}
+  const ctm=e.target.closest("[data-copytiming]");
+  if(ctm){copy(ctm.closest(".cfoot").querySelector("[data-timing]").value,"Timing reply");return;}
   const cs=e.target.closest("[data-copysubj]");
   if(cs){copy(cs.closest(".cfoot").querySelector("[data-subj]").value,"Subject");return;}
   const ce=e.target.closest("[data-copyemails]");
