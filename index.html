@@ -431,7 +431,9 @@ function swapTag(s,ln){
   return '<span class="tag">alt</span>';
 }
 function renderDone(){
-  const list=$("#list"); const done=D.done||[];
+  const list=$("#list");
+  const _ord=s=>{const p=(s||"").split("/");return p.length===3?(+p[2])*10000+(+p[0])*100+(+p[1]):0;};
+  const done=(D.done||[]).slice().sort((a,b)=>_ord(b.resolved_date||b.order_date)-_ord(a.resolved_date||a.order_date));
   $("#empty").textContent="No completed orders yet. An order moves here once its backordered items clear and the sales order is fully billed in NetSuite.";
   $("#empty").style.display=done.length?"none":"block";
   done.forEach(o=>{
