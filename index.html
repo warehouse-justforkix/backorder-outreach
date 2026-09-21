@@ -84,6 +84,7 @@ header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 8
   box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;
   display:grid;grid-template-columns:1fr 262px}
 .card.urgent{border-color:var(--rose-line)}
+.card.expedited{border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
 .cbody{min-width:0}
 .cside{border-left:1px solid var(--line-soft);background:var(--panel-2);
   padding:14px;display:flex;flex-direction:column;gap:10px}
@@ -143,6 +144,7 @@ header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 8
 .b-back{background:var(--teal-bg);color:var(--teal-ink);border-color:var(--teal-line)}
 .b-swap{background:var(--green-bg);color:var(--green-ink);border-color:var(--green-line)}
 .b-plain{background:var(--panel-2);color:var(--ink-soft);border-color:var(--line)}
+.b-air{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .timing{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
 .timing b{color:var(--ink);font-weight:600}
 .lqty{text-align:right;font-size:12.5px;color:var(--ink-faint);white-space:nowrap}
@@ -250,6 +252,7 @@ details.swap[open]>summary .chev{transform:rotate(90deg)}
   <div class="hrow" style="padding-top:0">
     <div class="filters" id="filters">
       <button class="chip" data-f="all" aria-pressed="true">All <span class="n" id="c-all">0</span></button>
+      <button class="chip" data-f="expedited" aria-pressed="false">✈ Expedited air <span class="n" id="c-expedited">0</span></button>
       <button class="chip" data-f="refund" aria-pressed="false">Refund only <span class="n" id="c-refund">0</span></button>
       <button class="chip" data-f="disc" aria-pressed="false">Has discontinued <span class="n" id="c-disc">0</span></button>
       <button class="chip" data-f="back" aria-pressed="false">Backorder only <span class="n" id="c-back">0</span></button>
@@ -407,6 +410,7 @@ function matchOrder(o){
     if(!hay.includes(q))return false;}
   const st=window.STATUS[o.doc]||{}, contacted=!!(st.emailed||st.called);
   if(filter==="all")return true;
+  if(filter==="expedited")return o.expedited;
   if(filter==="refund")return o.needs_refund_only;
   if(filter==="disc")return o.has_discontinued;
   if(filter==="back")return !o.has_discontinued;
@@ -466,7 +470,7 @@ function render(){
   shown.forEach(o=>{
     if(!o._sel)o._sel=o.lines.map(l=>l.swaps.length?[l.swaps[0].sku]:[]);
     const card=document.createElement("div");
-    card.className="card"+(o.needs_refund_only?" urgent":"");
+    card.className="card"+(o.expedited?" expedited":"")+(o.needs_refund_only?" urgent":"");
     // header
     let refs=`<div class="ref"><span class="lab">NS Order</span><span class="val">${esc(o.doc)}</span>
       <button class="copy" data-copy="${esc(o.doc)}" data-lab="NS order #">${IC.copy}</button></div>`;
@@ -521,7 +525,7 @@ function render(){
     card.innerHTML=`
       <div class="cbody">
         <div class="chead">
-          <div class="cust"><div class="name">${esc(o.customer)}</div>
+          <div class="cust"><div class="name">${esc(o.customer)}${o.expedited?` <span class="badge b-air" title="${esc(o.ship_method||"Expedited air")}">✈ ${esc(o.ship_label||"Air")}</span>`:""}</div>
             <div class="cid">Customer ${esc(o.customer_id)} · ordered ${esc(o.order_date)} · flagged ${esc(o.flagged)}${o.phone_email?" · ☎ phone/email order":""}</div></div>
           <div class="refs">${refs}</div>
           <div class="emails">${emails}</div>
@@ -645,6 +649,7 @@ function init(){
   const disc=os.filter(o=>o.has_discontinued).length;
   $("#s-disc").textContent=disc;
   $("#c-all").textContent=os.length;
+  $("#c-expedited").textContent=os.filter(o=>o.expedited).length;
   $("#c-refund").textContent=os.filter(o=>o.needs_refund_only).length;
   $("#c-disc").textContent=disc;
   $("#c-back").textContent=os.filter(o=>!o.has_discontinued).length;
