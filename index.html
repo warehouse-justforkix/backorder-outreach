@@ -374,7 +374,7 @@ function buildAirEmail(o){
     ? `backordered items (${names.join(", ")})`
     : `a backordered item, ${names[0]},`;
   const wasWere = many?"These items were":"This item was";
-  const p1=`We are reaching out to inform you that you have ${itemPhrase} on your air shipment selection (order #${ref}). ${wasWere} discontinued, showing 0 stock available at the time of purchase and went to backorder. We should be receiving stock shortly and can resume shipment as soon as stock arrives.`;
+  const p1=`We are reaching out to inform you that you have ${itemPhrase} on your air shipment selection (order #${ref}). ${wasWere} out of stock, showing 0 stock available at the time of purchase and went to backorder. We should be receiving stock shortly and can resume shipment as soon as stock arrives.`;
   const p2=`Terribly sorry for any inconvenience, please let me know how you'd like to proceed.`;
   const body=`Hi ${g},\n\n${p1}\n\n${p2}`;
   const html=`<p>Hi ${esc(g)},</p><p>${esc(p1)}</p>`
